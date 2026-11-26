@@ -75,3 +75,10 @@ with sl.expander("AI Advice"):
     ask_ai(f"Here is a list of genres in my dataset: [{", ".join(genres)}]. I want to perform analysis on them, but there are too many. I want to group them into clusters that are similar, so later I can determine if population and energy are correlated. There are other features too, including acousticness, danceability, instrumentalness, tempo, and valence. How can I group the genres in clusters best for my later analysis without ruining the usefulness of the analysis?")
     ask_ai("I will use K-Means. What features should I use?")
     ask_ai("Why use energy if I am measuring the correlation of it later? Isn't that bad?")
+
+cluster_count = 5
+clustering_features = ["acousticness", "danceability", "instrumentalness", "tempo", "valence"]
+feature_names = ", ".join(clustering_features[:-1])
+feature_names += f", and {clustering_features[-1]}"
+
+sl.write(f"Let's create {cluster_count} clusters. We can decide on which genres should be in which cluster by using K-Means. We can optimize the centroids of the K-Means around the features {feature_names}. Energy and popularity are not used in this analysis because they will be compared later.")
