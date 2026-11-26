@@ -98,3 +98,24 @@ genre_averages["Cluster"] = kmeans.fit_predict(scaled_averages) + 1
 
 cluster_summary = genre_averages.groupby("Cluster")[clustering_features].mean()
 cluster_summary["Genres"] = genre_averages.groupby("Cluster").size()
+
+sl.write("I generated the clusters using Sci-Kit to perform the K-Means algorithm using Sci-Kit.")
+
+sl.write("Now that the clusters are created, I want to name them based on what genres they contain.")
+
+cluster_names = []
+with sl.expander("AI: Name the Clusters"):
+    cluster_genre_name_lists = []
+    for cluster in range(1, cluster_count + 1):
+        cluster_genres = genre_averages[genre_averages["Cluster"] == cluster]
+        cluster_genre_name_lists.append(f"[{", ".join(cluster_genres.index)}]")
+    cluster_genre_names = f"[{", ".join(cluster_genre_name_lists)}]"
+    clusters = ask_ai(f"I want to name the kmeans cluster result. return in comma seperated list of strings with nothing else, with nothing else in your response. These are the genres per cluster: {cluster_genre_names}. Make sure each cluster has a unique name.")
+    cluster_names = clusters.split(",")
+    for cluster in range(cluster_count):
+        cluster_names[cluster] = cluster_names[cluster].strip()
+
+cluster_name_text = ", ".join(cluster_names[:-1])
+cluster_name_text += f", and {cluster_names[-1]}"
+
+sl.write(f"I used the AI in order to come up with names for each cluster based on the genres they contain. The names are {cluster_name_text}.")
