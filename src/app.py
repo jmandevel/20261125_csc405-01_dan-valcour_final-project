@@ -42,3 +42,13 @@ data = load_data()
 with sl.expander("Data Head"):
     sl.write(f"Loaded {data.shape[0]:,} rows and {data.shape[1]:,} columns. Viewing the first 5 rows.")
     sl.write(data.head())
+
+sl.header("Data Cleaning and Processing")
+
+sl.subheader("Missing Values")
+
+sl.write("We should start this project by cleaning the dataset. First, we should look for missing values.")
+
+missing_values = data.isna().sum().rename("Missing values")
+with sl.expander("Missing Values Before Cleaning"):
+    sl.write(missing_values.to_frame())
