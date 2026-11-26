@@ -30,13 +30,13 @@ def load_data():
     return pd.read_csv("data/dataset.csv", index_col=0)
 
 sl.title("Spotify Track Energy and Popularity")
-sl.markdown("This report examines how track energy relates to popularity across Spotify genres.")
+sl.markdown("This report examines how track energy is correlated to popularity across Spotify genres.")
 
 sl.header("Data Acquisition")
 sl.markdown("The [Spotify Tracks Dataset on Kaggle](https://www.kaggle.com/datasets/maharshipandya/-spotify-tracks-dataset) was collected using the Spotify API. It was created by Maharshi Pandya and released under the ODC Open Database License (ODbL).")
 
 with sl.expander("AI Advice"):
-    ask_ai("I plan to use the Kaggle Spotify Tracks Dataset (https://www.kaggle.com/datasets/maharshipandya/-spotify-tracks-dataset) to study how track energy relates to popularity across genres. What dataset properties and limitations should I check before using it for this question?")
+    ask_ai("I plan to use the Kaggle Spotify Tracks Dataset (https://www.kaggle.com/datasets/maharshipandya/-spotify-tracks-dataset) to study how track energy is correlated to popularity across genres. What dataset properties and limitations should I check before using it for this question?")
 
 data = load_data()
 with sl.expander("Data Head"):
