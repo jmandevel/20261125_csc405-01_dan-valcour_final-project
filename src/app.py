@@ -128,3 +128,28 @@ for cluster in range(1, cluster_count + 1):
     with sl.expander(f"Cluster {cluster}: {cluster_names[cluster - 1]} ({len(cluster_genres)} genres)"):
         cluster_table = cluster_genres[clustering_features].round(2)
         sl.dataframe(cluster_table)
+
+with sl.expander("AI Advice"):
+    ask_ai(f"Generate me code to output a 3d scatterplot to how clusters are related to features acousticness, danceability, and insturmentalness.")
+
+with sl.expander("K-Means Result"):
+    sl.write(cluster_summary.round(2))
+    fig = Figure(figsize=(10, 8))
+    ax = fig.add_subplot(111, projection="3d")
+    for cluster in range(1, cluster_count + 1):
+        cluster_genres = genre_averages[genre_averages["Cluster"] == cluster]
+        ax.scatter(
+            cluster_genres[clustering_features[0]],
+            cluster_genres[clustering_features[1]],
+            cluster_genres[clustering_features[2]],
+            label=f"Cluster {cluster}",
+            cmap="tab10",
+            alpha=0.8,
+            edgecolor='k'
+        )
+    ax.set_xlabel(f"Average {clustering_features[0].capitalize()}")
+    ax.set_ylabel(f"Average {clustering_features[1].capitalize()}")
+    ax.set_zlabel(f"Average {clustering_features[2].capitalize()}")
+    ax.set_title("Scatter Plot of Genre Clusters")
+    ax.legend()
+    sl.pyplot(fig)
