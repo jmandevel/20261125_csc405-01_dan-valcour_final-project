@@ -22,10 +22,11 @@ def message(who, what):
         sl.write(what)
     messages.append((who, what))
 
-def ask_ai(prompt):
+def ask_ai(prompt) -> str:
     message("user", prompt)
     response = invoke_cached(messages)
     message("assistant", response)
+    return response
 
 @sl.cache_data(persist="disk")
 def load_data():
