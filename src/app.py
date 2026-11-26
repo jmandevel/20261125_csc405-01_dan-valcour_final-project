@@ -36,3 +36,7 @@ sl.markdown("The [Spotify Tracks Dataset on Kaggle](https://www.kaggle.com/datas
 with sl.expander("AI Advice"):
     ask_ai("I plan to use the Kaggle Spotify Tracks Dataset (https://www.kaggle.com/datasets/maharshipandya/-spotify-tracks-dataset) to study how track energy relates to popularity across genres. What dataset properties and limitations should I check before using it for this question?")
 
+data = load_data()
+with sl.expander("Data Head"):
+    sl.write(f"Loaded {data.shape[0]:,} rows and {data.shape[1]:,} columns.")
+    sl.write(data.head())
