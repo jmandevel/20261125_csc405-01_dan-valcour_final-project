@@ -2,6 +2,9 @@ from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 import streamlit as sl
 import pandas as pd
+import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
+import seaborn as sns
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 
