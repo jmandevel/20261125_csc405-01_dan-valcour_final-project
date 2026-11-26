@@ -69,3 +69,8 @@ with sl.expander("List of Genres"):
     sl.dataframe(pd.DataFrame({"Genre": genres}), height=300, hide_index=True)
 
 sl.write("It will be difficult to analyze this many genres. Instead of performing our analysis per genre, let's do it on groups of genres in clusters based on similarity")
+
+with sl.expander("AI Advice"):
+    ask_ai(f"Here is a list of genres in my dataset: [{", ".join(genres)}]. I want to perform analysis on them, but there are too many. I want to group them into clusters that are similar, so later I can determine if population and energy are correlated. There are other features too, including acousticness, danceability, instrumentalness, tempo, and valence. How can I group the genres in clusters best for my later analysis without ruining the usefulness of the analysis?")
+    ask_ai("I will use K-Means. What features should I use?")
+    ask_ai("Why use energy if I am measuring the correlation of it later? Isn't that bad?")
