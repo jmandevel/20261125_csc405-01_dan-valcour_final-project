@@ -31,4 +31,4 @@ sl.title("Spotify Track Energy and Popularity")
 sl.markdown("This report examines how track energy relates to popularity across Spotify genres.")
 
 sl.header("Data Acquisition")
-sl.markdown("The [Spotify Tracks Dataset on Kaggle](https://www.kaggle.com/datasets/maharshipandya/-spotify-tracks-dataset) was collected using the Spotify API. It was created by Maharshi Pandya and released under the ODC Open Database License (ODBL).")
+sl.markdown("The [Spotify Tracks Dataset on Kaggle](https://www.kaggle.com/datasets/maharshipandya/-spotify-tracks-dataset) was collected using the Spotify API. It was created by Maharshi Pandya and released under the ODC Open Database License (ODbL).")
