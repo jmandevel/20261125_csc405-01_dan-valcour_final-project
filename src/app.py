@@ -1,6 +1,7 @@
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 import streamlit as sl
+import pandas as pd
 
 load_dotenv()
 
@@ -21,3 +22,13 @@ def ai_advice(prompt):
         response = invoke_cached(prompt)
         with sl.chat_message("ChatGPT"):
             sl.write(response)
+
+@sl.cache_data(persist="disk")
+def load_data():
+    return pd.read_csv("data/dataset.csv", index_col=0)
+
+sl.title("Spotify Track Energy and Popularity")
+sl.markdown("This report examines how track energy relates to popularity across Spotify genres.")
+
+sl.header("Data Acquisition")
+sl.markdown("The [Spotify Tracks Dataset on Kaggle](https://www.kaggle.com/datasets/maharshipandya/-spotify-tracks-dataset) was collected using the Spotify API. It was created by Maharshi Pandya and released under the ODC Open Database License (ODBL).")
