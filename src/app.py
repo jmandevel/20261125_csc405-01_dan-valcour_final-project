@@ -57,3 +57,13 @@ with sl.expander("AI Advice"):
     ask_ai(f"Here are the missing counts by column:\n{missing_values.to_string()}\nI plan to keep rows missing artist, album, or track names because my analysis uses track IDs, genres and musical measurements. Is this a good choice? Which missing fields would change your advice?")
 
 sl.write("There appear to be missing values for artists, album_name, and track_name attributes. These attributes are not relevant to our data analysis, so we can ignore this.")
+
+sl.subheader("Clustering Data")
+sl.write("There are a a lot of genres in the datset. Let's look at all of them.")
+
+genres = sorted(data["track_genre"].unique())
+sl.write(f"The dataset contains {len(genres):,} genres.")
+with sl.expander("List of Genres"):
+    sl.dataframe(pd.DataFrame({"Genre": genres}), height=300, hide_index=True)
+
+sl.write("It will be difficult to analyze this many genres. Instead of performing our analysis per genre, let's do it on groups of genres in clusters based on similarity")
