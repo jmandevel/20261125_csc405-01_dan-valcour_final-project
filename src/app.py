@@ -8,5 +8,7 @@ llm = ChatOpenAI(
     temperature=0.7
 )
 
-response = llm.invoke("Hello")
-print(response.content)
+@sl.cache_data(persist="disk")
+def invoke_cached(prompt):
+    response = llm.invoke(prompt)
+    return response.content
