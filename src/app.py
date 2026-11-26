@@ -52,3 +52,6 @@ sl.write("We should start this project by cleaning the dataset. First, we should
 missing_values = data.isna().sum().rename("Missing values")
 with sl.expander("Missing Values Before Cleaning"):
     sl.write(missing_values.to_frame())
+
+with sl.expander("AI Advice"):
+    ask_ai(f"Here are the missing counts by column:\n{missing_values.to_string()}\nI plan to keep rows missing artist, album, or track names because my analysis uses track IDs, genres and musical measurements. Is this a good choice? Which missing fields would change your advice?")
