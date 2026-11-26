@@ -1,5 +1,6 @@
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
+import streamlit as sl
 
 load_dotenv()
 
@@ -12,3 +13,11 @@ llm = ChatOpenAI(
 def invoke_cached(prompt):
     response = llm.invoke(prompt)
     return response.content
+
+def ai_advice(prompt):
+    with sl.expander("AI Advice"):
+        with sl.chat_message("user"):
+            sl.write(prompt)
+        response = invoke_cached(prompt)
+        with sl.chat_message("ChatGPT"):
+            sl.write(response)
