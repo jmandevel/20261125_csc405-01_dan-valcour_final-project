@@ -17,13 +17,15 @@ def invoke_cached(messages):
 
 messages = []
 
+def message(who, what):
+    with sl.chat_message(who):
+        sl.write(what)
+    messages.append((who, what))
+
 def ask_ai(prompt):
-    with sl.chat_message("user"):
-        sl.write(prompt)
-    messages.append(prompt)
+    message("user", prompt)
     response = invoke_cached(messages)
-    with sl.chat_message("assistant"):
-        sl.write(response)
+    message("assistant", response)
 
 @sl.cache_data(persist="disk")
 def load_data():
