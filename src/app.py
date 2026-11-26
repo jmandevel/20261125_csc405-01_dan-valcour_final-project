@@ -194,3 +194,21 @@ with sl.expander("Song Entries and Duplicates by Cluster"):
     ax.set_xticks(song_counts_before.index)
     ax.legend()
     sl.pyplot(fig)
+
+sl.write("Now, we can analyze the clusters we created.")
+
+with sl.expander("AI Advice"):
+    ask_ai("I want to analyze the clusters with a chart of 5 number summary including standard deviation and variance. I also want box and whisker plots for the features we will analyze. I want one set for population across all 5 clusters and another set for energy.")
+
+for column in ["energy", "popularity"]:
+    with sl.expander(f"{column.capitalize()} by Cluster"):
+        grouped = cluster_tracks.groupby("Cluster")[column]
+        summary = grouped.describe()
+        summary["var"] = grouped.var()
+        sl.write(summary[["count", "min", "25%", "50%", "75%", "max", "std", "var"]].round(2))
+        fig = Figure(figsize=(10, 4))
+        ax = fig.subplots()
+        sns.boxplot(data=cluster_tracks, x="Cluster", y=f"{column}", ax=ax)
+        ax.set_ylabel(column.capitalize())
+        fig.tight_layout()
+        sl.pyplot(fig)
