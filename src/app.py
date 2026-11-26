@@ -9,6 +9,7 @@ from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 from scipy.stats import spearmanr
 import numpy as np
+from scipy.stats import norm
 
 load_dotenv()
 
@@ -285,3 +286,64 @@ with sl.expander("Cluster Correlations"):
     plt.xticks(rotation=45, ha='right')
     plt.tight_layout()
     sl.pyplot(fig2)
+
+sl.write("Notice that energy and population have a negative correlation in the clusters \"Dance & Urban\", \"Calm & Classical\", and \"Rock & Metal\". Meanwhile, notice that that \"Folk & Acoutsic\" has a positive correlation, while \"Electronic & Techno\" has almost no correlation. All of the correlations weak, and the largest is .21 (\"Calm & Classical\").")
+
+with sl.expander("AI Advice"):
+    ask_ai("Now, I want to perform a test to see if the correlations are statistically significant between clusters. What test should I do?")
+    ask_ai("Generate code to do this.")
+    ask_ai("Yes, I want this integrated into my app. I want an expander showing results.")
+    ask_ai("How do I describe this test? What is my Null Hypothesis? Alt Hypothesis? What do I write to streamlit?")
+
+def fisher_z(r):
+    """Convert correlation coefficient to Fisher's z."""
+    return 0.5 * np.log((1 + r) / (1 - r))
+
+def compare_correlations(r1, n1, r2, n2):
+    """
+    Compare two independent Spearman correlations using Fisher's z-test.
+
+    Parameters:
+    - r1, r2: correlation coefficients
+    - n1, n2: sample sizes used to compute r1 and r2
+
+    Returns:
+    - z_stat: z statistic for difference
+    - p_value: two-tailed p-value
+    """
+    # Handle edge cases where r is exactly 1 or -1
+    if abs(r1) == 1 or abs(r2) == 1:
+        return None, None  # Cannot compute Fisher z for perfect correlations
+
+    z1 = fisher_z(r1)
+    z2 = fisher_z(r2)
+    se = np.sqrt(1/(n1 - 3) + 1/(n2 - 3))
+    z_stat = (z1 - z2) / se
+    p_value = 2 * (1 - norm.cdf(abs(z_stat)))  # two-tailed
+    return z_stat, p_value
+
+sl.write("I can perform a Fisher's z-test for comparing independent Spearman correlations. This test evaluates whether the strength of the monotonic association (Spearman correlation) between energy and popularity differs significantly between two independent clusters of songs.")
+sl.write("My Null Hypothesis is the Spearman correlation between energy and popularity is the same in both clusters.")
+sl.write("My Alterntive Hypothesis is the Spearman correlation between energy and popularity is different between the two clusters.")
+
+with sl.expander("Compare Correlations Between Clusters"):
+    rows = []
+    for i in range(len(cluster_names)):
+        for j in range(i + 1, len(cluster_names)):
+            r1, n1 = corr_pvals[i][0], cluster_sizes[i]
+            r2, n2 = corr_pvals[j][0], cluster_sizes[j]
+            z_stat, p_val = compare_correlations(r1, n1, r2, n2)
+            if z_stat is None:
+                result_text = "Cannot compute (perfect correlation)"
+            else:
+                result_text = f"z = {z_stat:.3f}, p = {p_val:.4f}"
+            significant = "Yes" if p_val < 0.05 else "No"
+            rows.append({
+                "Cluster 1": cluster_names[i],
+                "Cluster 2": cluster_names[j],
+                "Result": result_text,
+                "Reject Null Hypothesis?": significant
+            })
+    sl.table(rows)
+
+sl.write("It appears that the correlations are significant!")
