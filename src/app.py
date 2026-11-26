@@ -326,13 +326,19 @@ sl.write("I can perform a Fisher's z-test for comparing independent Spearman cor
 sl.write("My Null Hypothesis is the Spearman correlation between energy and popularity is the same in both clusters.")
 sl.write("My Alterntive Hypothesis is the Spearman correlation between energy and popularity is different between the two clusters.")
 
+z_test_result = []
 with sl.expander("Compare Correlations Between Clusters"):
     rows = []
-    for i in range(len(cluster_names)):
-        for j in range(i + 1, len(cluster_names)):
+    for i in range(cluster_count):
+        col = []
+        z_test_result.append(col)
+        for j in range(cluster_count):
             r1, n1 = corr_pvals[i][0], cluster_sizes[i]
             r2, n2 = corr_pvals[j][0], cluster_sizes[j]
             z_stat, p_val = compare_correlations(r1, n1, r2, n2)
+            col.append((z_stat, p_val))
+            if j <= i:
+                continue
             if z_stat is None:
                 result_text = "Cannot compute (perfect correlation)"
             else:
@@ -346,4 +352,18 @@ with sl.expander("Compare Correlations Between Clusters"):
             })
     sl.table(rows)
 
-sl.write("It appears that the correlations are significant!")
+with sl.expander("AI Advice: Interpreting the Correlations"):
+    prompt = "I measured the Spearman correlation between track energy and popularity within each genre cluster. I then used pairwise z tests to compare the correlations. A track counts once per cluster, but the same track can appear in more than one cluster.\n\nSpearman results by cluster:\n"
+
+    for i in range(cluster_count):
+        prompt += f"Cluster {cluster} ({cluster_names[cluster_count - 1]}): rho = {corr_pvals[i][0]:.4f}, p = {corr_pvals[i][1]:.4g}\n"
+    prompt += "\nPairwise Fisher z test results:\n"
+    for i in range(cluster_count):
+        for j in range(cluster_count):
+            if j <= i:
+                continue
+            prompt += f"Cluster {cluster_names[i]} vs. cluster {cluster_names[j]}: z = {z_test_result[i][j][0]:.4f}, p = {z_test_result[i][j][1]:.4g}\n"
+    prompt += "\nHow should I interpret the direction and strength of the correlations? Explain the difference between testing whether one cluster's correlation is zero and testing whether two clusters' correlations differ. Are these Fisher z tests appropriate for Spearman correlations when clusters share tracks? How should I account for multiple comparisons, and what conclusions do these results support? Note that there are no duplicate tracks in the same cluster."
+    ask_ai(prompt)
+
+sl.write("We measured Spearman correlations between track energy and popularity within each genre cluster, finding mostly weak but statistically significant associations. Pairwise Fisher z-tests indicated significant differences in correlation strength between clusters. However, because some tracks appear in multiple clusters, these tests violate the assumption of independent samples, so results should be interpreted cautiously. Adjusting for multiple comparisons confirms the significance of most differences. Overall, the data suggest that the energy-popularity relationship varies across genre clusters, but further analysis accounting for overlapping tracks is needed to confirm these findings robustly.")
