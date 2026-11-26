@@ -55,3 +55,5 @@ with sl.expander("Missing Values Before Cleaning"):
 
 with sl.expander("AI Advice"):
     ask_ai(f"Here are the missing counts by column:\n{missing_values.to_string()}\nI plan to keep rows missing artist, album, or track names because my analysis uses track IDs, genres and musical measurements. Is this a good choice? Which missing fields would change your advice?")
+
+sl.write("There appear to be missing values for artists, album_name, and track_name attributes. These attributes are not relevant to our data analysis, so we can ignore this.")
