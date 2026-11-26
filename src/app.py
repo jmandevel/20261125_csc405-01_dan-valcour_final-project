@@ -2,6 +2,8 @@ from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 import streamlit as sl
 import pandas as pd
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
 
 load_dotenv()
 
@@ -84,3 +86,14 @@ feature_names += f", and {clustering_features[-1]}"
 sl.write(f"Let's create {cluster_count} clusters. We can decide on which genres should be in which cluster by using K-Means. We can optimize the centroids of the K-Means around the features {feature_names}. Energy and popularity are not used in this analysis because they will be compared later.")
 
 genre_averages = genre_data.groupby("track_genre")[clustering_features].mean()
+with sl.expander("AI Advice"):
+    ask_ai(f"I have average for all genres around the clustering features {feature_names} in the Pandas DataFrame genre_averages. Now, I want to do K-Means using sci-kit. Generate me code to do this.")
+
+scaler = StandardScaler()
+scaled_averages = scaler.fit_transform(genre_averages)
+
+kmeans = KMeans(n_clusters=cluster_count, random_state=42)
+genre_averages["Cluster"] = kmeans.fit_predict(scaled_averages) + 1
+
+cluster_summary = genre_averages.groupby("Cluster")[clustering_features].mean()
+cluster_summary["Genres"] = genre_averages.groupby("Cluster").size()
