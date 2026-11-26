@@ -15,7 +15,7 @@ def invoke_cached(prompt):
     response = llm.invoke(prompt)
     return response.content
 
-def ai_advice(prompt):
+def ask_ai(prompt):
     with sl.expander("AI Advice"):
         with sl.chat_message("user"):
             sl.write(prompt)
@@ -33,4 +33,5 @@ sl.markdown("This report examines how track energy relates to popularity across 
 sl.header("Data Acquisition")
 sl.markdown("The [Spotify Tracks Dataset on Kaggle](https://www.kaggle.com/datasets/maharshipandya/-spotify-tracks-dataset) was collected using the Spotify API. It was created by Maharshi Pandya and released under the ODC Open Database License (ODbL).")
 
-ai_advice("I plan to use the Kaggle Spotify Tracks Dataset (https://www.kaggle.com/datasets/maharshipandya/-spotify-tracks-dataset) to study how track energy relates to popularity across genres. What dataset properties and limitations should I check before using it for this question?")
+ask_ai("I plan to use the Kaggle Spotify Tracks Dataset (https://www.kaggle.com/datasets/maharshipandya/-spotify-tracks-dataset) to study how track energy relates to popularity across genres. What dataset properties and limitations should I check before using it for this question?")
+
