@@ -5,7 +5,7 @@ load_dotenv()
 
 llm = ChatOpenAI(
     model="gpt-4.1-mini",
-    temperature=0.7
+    temperature=0
 )
 
 @sl.cache_data(persist="disk")
