@@ -33,5 +33,6 @@ sl.markdown("This report examines how track energy relates to popularity across 
 sl.header("Data Acquisition")
 sl.markdown("The [Spotify Tracks Dataset on Kaggle](https://www.kaggle.com/datasets/maharshipandya/-spotify-tracks-dataset) was collected using the Spotify API. It was created by Maharshi Pandya and released under the ODC Open Database License (ODbL).")
 
-ask_ai("I plan to use the Kaggle Spotify Tracks Dataset (https://www.kaggle.com/datasets/maharshipandya/-spotify-tracks-dataset) to study how track energy relates to popularity across genres. What dataset properties and limitations should I check before using it for this question?")
+with sl.expander("AI Advice"):
+    ask_ai("I plan to use the Kaggle Spotify Tracks Dataset (https://www.kaggle.com/datasets/maharshipandya/-spotify-tracks-dataset) to study how track energy relates to popularity across genres. What dataset properties and limitations should I check before using it for this question?")
 
