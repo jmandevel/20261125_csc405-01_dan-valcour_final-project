@@ -11,17 +11,19 @@ llm = ChatOpenAI(
 )
 
 @sl.cache_data(persist="disk")
-def invoke_cached(prompt):
-    response = llm.invoke(prompt)
+def invoke_cached(messages):
+    response = llm.invoke(messages)
     return response.content
 
+messages = []
+
 def ask_ai(prompt):
-    with sl.expander("AI Advice"):
-        with sl.chat_message("user"):
-            sl.write(prompt)
-        response = invoke_cached(prompt)
-        with sl.chat_message("assistant"):
-            sl.write(response)
+    with sl.chat_message("user"):
+        sl.write(prompt)
+    messages.append(prompt)
+    response = invoke_cached(messages)
+    with sl.chat_message("assistant"):
+        sl.write(response)
 
 @sl.cache_data(persist="disk")
 def load_data():
