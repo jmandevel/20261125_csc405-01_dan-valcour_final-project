@@ -7,6 +7,7 @@ from matplotlib.figure import Figure
 import seaborn as sns
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
+from scipy.stats import spearmanr
 
 load_dotenv()
 
@@ -237,3 +238,18 @@ for cluster in range(1, cluster_count + 1):
         ax.set_xlabel('Energy')
         ax.set_ylabel('Popularity')
         sl.pyplot(fig)
+
+sl.header("Correlation by Genre")
+
+with sl.expander("AI Advice"):
+    ask_ai("I have my clusters determined. What else should I do before doing correlation tests on energy and popularity?")
+    ask_ai("If I leave outliers, will this effect normalization? Will this negatively effect a Pearson correlation")
+    ask_ai("Generate me code to do Spearman correlation. cluster_count is amount of clusters, and its 1 indexed. cluster_tracks is a Pandas DataFrame containing all tracks including Cluster id.")
+
+sl.write("Since I am leaving the outliers in my data, I will analyze my data with a Spearman correlation coefficient. A Pearson correlation would be negatively effected by so many outliers.")
+
+corr_pvals = []
+for cluster_id in range(1, cluster_count + 1):
+    cluster_data = cluster_tracks[cluster_tracks['Cluster'] == cluster_id]
+    corr, pval = spearmanr(cluster_data['energy'], cluster_data['popularity'])
+    corr_pvals.append([corr, pval])
