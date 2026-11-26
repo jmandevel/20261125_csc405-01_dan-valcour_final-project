@@ -96,7 +96,7 @@ with sl.expander("AI Advice"):
 scaler = StandardScaler()
 scaled_averages = scaler.fit_transform(genre_averages)
 
-kmeans = KMeans(n_clusters=cluster_count, random_state=42)
+kmeans = KMeans(n_clusters=cluster_count, random_state=42, n_init=10)
 genre_averages["Cluster"] = kmeans.fit_predict(scaled_averages) + 1
 
 cluster_summary = genre_averages.groupby("Cluster")[clustering_features].mean()
