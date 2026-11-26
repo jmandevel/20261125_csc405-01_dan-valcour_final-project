@@ -156,3 +156,41 @@ with sl.expander("K-Means Result"):
     ax.set_title("Scatter Plot of Genre Clusters")
     ax.legend()
     sl.pyplot(fig)
+
+with sl.expander("AI Advice"):
+    ask_ai("I finished the K-Means calucluation, but there is something that I am worried about. Songs can exist in more than one genre, so there could be multiple songs in the same cluster. Is this bad, and should I remove duplicates per cluster?")
+    ask_ai("Should I remove duplicates across all clusters, or does this not matter.")
+    ask_ai("Generate me code to remove duplicates using drop_duplicates. I also want to make a stacked horizontal bar chart showing amount of songs per genre and percent of duplicates.")
+
+sl.write("It is possible for a song to exist in multiple genres. We only want a song to exist once per cluster. We need to remove songs with the same track_id in each cluster.")
+
+genre_clusters = genre_averages[["Cluster"]].reset_index()
+cluster_tracks = data.merge(genre_clusters, on="track_genre")
+song_counts_before = cluster_tracks.groupby("Cluster").size()
+cluster_tracks = cluster_tracks.drop_duplicates(subset=["track_id", "Cluster"], keep='first')
+song_counts_after = cluster_tracks.groupby("Cluster").size()
+duplicates_removed = song_counts_before - song_counts_after
+
+percent_removed = 100 * duplicates_removed / song_counts_before
+
+with sl.expander("Song Entries and Duplicates by Cluster"):
+    sl.write(f"Removed {duplicates_removed.sum():,} duplicate song entries in total.")
+    fig = Figure(figsize=(8, 4))
+    ax = fig.subplots()
+    ax.bar(song_counts_after.index, song_counts_after, label="Unique tracks")
+    bars = ax.bar(
+        duplicates_removed.index,
+        duplicates_removed,
+        bottom=song_counts_after,
+        label="Duplicate entries removed",
+    )
+    labels = [
+        f"{percent:.1f}% removed"
+        for count, percent in zip(song_counts_before, percent_removed)
+    ]
+    ax.bar_label(bars, labels=labels)
+    ax.set_xlabel("Cluster")
+    ax.set_ylabel("Song entries")
+    ax.set_xticks(song_counts_before.index)
+    ax.legend()
+    sl.pyplot(fig)
