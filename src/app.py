@@ -219,14 +219,21 @@ with sl.expander("AI Advice"):
 sl.write("I see a lot of outliers, but I will not worry about them because they are valid data points. Removing them would make our analysis less accurate.")
 
 with sl.expander("AI Advice"):
-    ask_ai("I want to make scatterplots for each cluster with popularity on y-axis and energy on x-axis. Make me some code that does this. I want each in a seperate streamlit expander per cluster.")
+    ask_ai("I want to make scatterplots for each cluster with popularity on y-axis and energy on x-axis. Make me some code that does this. I want each in a seperate streamlit expander per cluster. I want regression lines.")
 
 for cluster in range(1, cluster_count + 1):
     with sl.expander(f"Energy and Popularity for Cluster {cluster}: {cluster_names[cluster - 1]}"):
         tracks = cluster_tracks[cluster_tracks["Cluster"] == cluster]
-        track_numbers = range(1, len(tracks) + 1)
         fig, ax = plt.subplots(figsize=(6, 4))
-        sns.scatterplot(data=tracks, x='energy', y='popularity', ax=ax, alpha=0.6)
+        sns.regplot(
+            x='energy',
+            y='popularity',
+            data=tracks,
+            scatter_kws={'alpha':0.1, 's':8},
+            line_kws={'color':'red'},
+            ax=ax
+        )
+        ax.set_title(f'Popularity vs Energy - {cluster_names[cluster - 1]}')
         ax.set_xlabel('Energy')
         ax.set_ylabel('Popularity')
         sl.pyplot(fig)
