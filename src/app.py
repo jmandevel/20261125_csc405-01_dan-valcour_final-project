@@ -8,6 +8,7 @@ import seaborn as sns
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 from scipy.stats import spearmanr
+import numpy as np
 
 load_dotenv()
 
@@ -253,3 +254,32 @@ for cluster_id in range(1, cluster_count + 1):
     cluster_data = cluster_tracks[cluster_tracks['Cluster'] == cluster_id]
     corr, pval = spearmanr(cluster_data['energy'], cluster_data['popularity'])
     corr_pvals.append([corr, pval])
+
+with sl.expander("AI Advice"):
+    ask_ai("I want to make a bar chart showing different between correlation strengths of clusters. Names are stored in cluster_names python list of size cluster_count. cor_pvals is python list of tuples with both Spearman correlation results and pvalues. Generate code for me. It should be in al.expander(\"Cluster Correlations\"). I also want another bar graph showing strengths of the correlations.")
+    ask_ai("How measure strength of Spearman correlation?")
+
+correlations = [item[0] for item in corr_pvals]
+p_values = [item[1] for item in corr_pvals]
+
+with sl.expander("Cluster Correlations"):
+    fig, ax = plt.subplots(figsize=(10, 5))
+    bars = ax.bar(cluster_names, np.abs(correlations), color='skyblue')
+    ax.set_ylabel('Absolute Spearman Correlation')
+    ax.set_title('Absolute Spearman Correlation Strengths by Cluster')
+    ax.set_ylim(0, 1)
+    ax.bar_label(bars, fmt='%.2f')
+    plt.xticks(rotation=45, ha='right')
+    plt.tight_layout()
+    sl.pyplot(fig)
+    fig2, ax2 = plt.subplots(figsize=(10, 5))
+    colors = ['green' if p <= 0.05 else 'gray' for p in p_values]
+    bars2 = ax2.bar(cluster_names, correlations, color=colors)
+    ax2.set_ylabel('Spearman Correlation')
+    ax2.set_title('Spearman Correlation by Cluster (Green = p ≤ 0.05)')
+    ax2.set_ylim(-1, 1)
+    ax2.axhline(0, color='black', linewidth=0.8)
+    ax2.bar_label(bars2, fmt='%.2f')
+    plt.xticks(rotation=45, ha='right')
+    plt.tight_layout()
+    sl.pyplot(fig2)
