@@ -40,5 +40,5 @@ with sl.expander("AI Advice"):
 
 data = load_data()
 with sl.expander("Data Head"):
-    sl.write(f"Loaded {data.shape[0]:,} rows and {data.shape[1]:,} columns.")
+    sl.write(f"Loaded {data.shape[0]:,} rows and {data.shape[1]:,} columns. Viewing the first 5 rows.")
     sl.write(data.head())
