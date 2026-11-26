@@ -85,7 +85,8 @@ feature_names += f", and {clustering_features[-1]}"
 
 sl.write(f"Let's create {cluster_count} clusters. We can decide on which genres should be in which cluster by using K-Means. We can optimize the centroids of the K-Means around the features {feature_names}. Energy and popularity are not used in this analysis because they will be compared later.")
 
-genre_averages = genre_data.groupby("track_genre")[clustering_features].mean()
+genre_averages = data.groupby("track_genre")[clustering_features].mean()
+
 with sl.expander("AI Advice"):
     ask_ai(f"I have average for all genres around the clustering features {feature_names} in the Pandas DataFrame genre_averages. Now, I want to do K-Means using sci-kit. Generate me code to do this.")
 
