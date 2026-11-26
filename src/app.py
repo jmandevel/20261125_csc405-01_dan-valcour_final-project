@@ -250,10 +250,12 @@ with sl.expander("AI Advice"):
 sl.write("Since I am leaving the outliers in my data, I will analyze my data with a Spearman correlation coefficient. A Pearson correlation would be negatively effected by so many outliers.")
 
 corr_pvals = []
+cluster_sizes = []
 for cluster_id in range(1, cluster_count + 1):
     cluster_data = cluster_tracks[cluster_tracks['Cluster'] == cluster_id]
     corr, pval = spearmanr(cluster_data['energy'], cluster_data['popularity'])
-    corr_pvals.append([corr, pval])
+    corr_pvals.append((corr, pval))
+    cluster_sizes.append(len(cluster_data))
 
 with sl.expander("AI Advice"):
     ask_ai("I want to make a bar chart showing different between correlation strengths of clusters. Names are stored in cluster_names python list of size cluster_count. cor_pvals is python list of tuples with both Spearman correlation results and pvalues. Generate code for me. It should be in al.expander(\"Cluster Correlations\"). I also want another bar graph showing strengths of the correlations.")
