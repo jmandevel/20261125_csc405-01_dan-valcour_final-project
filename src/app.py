@@ -20,7 +20,7 @@ def ai_advice(prompt):
         with sl.chat_message("user"):
             sl.write(prompt)
         response = invoke_cached(prompt)
-        with sl.chat_message("ChatGPT"):
+        with sl.chat_message("assistant"):
             sl.write(response)
 
 @sl.cache_data(persist="disk")
