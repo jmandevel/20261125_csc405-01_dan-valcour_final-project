@@ -119,3 +119,12 @@ cluster_name_text = ", ".join(cluster_names[:-1])
 cluster_name_text += f", and {cluster_names[-1]}"
 
 sl.write(f"I used the AI in order to come up with names for each cluster based on the genres they contain. The names are {cluster_name_text}.")
+
+with sl.expander("AI Advice"):
+    ask_ai(f"Generate me code to output tables with a list of the genres in each cluster, each in a streamlit expander.")
+
+for cluster in range(1, cluster_count + 1):
+    cluster_genres = genre_averages[genre_averages["Cluster"] == cluster]
+    with sl.expander(f"Cluster {cluster}: {cluster_names[cluster - 1]} ({len(cluster_genres)} genres)"):
+        cluster_table = cluster_genres[clustering_features].round(2)
+        sl.dataframe(cluster_table)
