@@ -326,31 +326,44 @@ sl.write("I can perform a Fisher's z-test for comparing independent Spearman cor
 sl.write("My Null Hypothesis is the Spearman correlation between energy and popularity is the same in both clusters.")
 sl.write("My Alterntive Hypothesis is the Spearman correlation between energy and popularity is different between the two clusters.")
 
-z_test_result = []
-with sl.expander("Compare Correlations Between Clusters"):
+
+def show_fisher_z_results(title, correlations, sizes, names):
+    results = [[(None, None) for name in names] for name in names]
     rows = []
-    for i in range(cluster_count):
-        col = []
-        z_test_result.append(col)
-        for j in range(cluster_count):
-            r1, n1 = corr_pvals[i][0], cluster_sizes[i]
-            r2, n2 = corr_pvals[j][0], cluster_sizes[j]
-            z_stat, p_val = compare_correlations(r1, n1, r2, n2)
-            col.append((z_stat, p_val))
-            if j <= i:
-                continue
-            if z_stat is None:
-                result_text = "Cannot compute (perfect correlation)"
-            else:
-                result_text = f"z = {z_stat:.3f}, p = {p_val:.4f}"
-            significant = "Yes" if p_val < 0.05 else "No"
-            rows.append({
-                "Cluster 1": cluster_names[i],
-                "Cluster 2": cluster_names[j],
-                "Result": result_text,
-                "Reject Null Hypothesis?": significant
-            })
-    sl.table(rows)
+
+    with sl.expander(title):
+        for i in range(len(names)):
+            for j in range(i + 1, len(names)):
+                z_stat, p_val = compare_correlations(
+                    correlations[i][0], sizes[i],
+                    correlations[j][0], sizes[j],
+                )
+                results[i][j] = (z_stat, p_val)
+
+                if p_val is None:
+                    result_text = "Unavailable"
+                    significant = "Unavailable"
+                else:
+                    result_text = f"z = {z_stat:.3f}, p = {p_val:.4g}"
+                    significant = "Yes" if p_val < 0.05 else "No"
+
+                rows.append({
+                    "Cluster 1": names[i],
+                    "Cluster 2": names[j],
+                    "Result": result_text,
+                    "Reject Null Hypothesis?": significant,
+                })
+
+        sl.table(rows)
+
+    return results
+
+z_test_result = show_fisher_z_results(
+    "Compare Correlations Between Clusters",
+    corr_pvals,
+    cluster_sizes,
+    cluster_names,
+)
 
 with sl.expander("AI Advice: Interpreting the Correlations"):
     prompt = "I measured the Spearman correlation between track energy and popularity within each genre cluster. I then used pairwise z tests to compare the correlations. A track counts once per cluster, but the same track can appear in more than one cluster.\n\nSpearman results by cluster:\n"
@@ -367,3 +380,59 @@ with sl.expander("AI Advice: Interpreting the Correlations"):
     ask_ai(prompt)
 
 sl.write("We measured Spearman correlations between track energy and popularity within each genre cluster, finding mostly weak but statistically significant associations. Pairwise Fisher z-tests indicated significant differences in correlation strength between clusters. However, because some tracks appear in multiple clusters, these tests violate the assumption of independent samples, so results should be interpreted cautiously. Adjusting for multiple comparisons confirms the significance of most differences. Overall, the data suggest that the energy-popularity relationship varies across genre clusters, but further analysis accounting for overlapping tracks is needed to confirm these findings robustly.")
+
+with sl.expander("AI Advice"):
+    ask_ai("Help me to implement more robust tests.")
+    ask_ai("My computer is not that powerful. What if I remove duplicates across clusters before the spearman test?")
+    ask_ai("Generate code to do this. Note I still have the functions you defined earlier available. I want to remove duplicates then do the test again.")
+
+sl.write("In order to increase the accuracy of the results, I will remove duplicates across clusters and perform the spearman correlation again. There are other tests I could perform, but my computer is not powerful enough to finish them.")
+
+deduped_tracks = cluster_tracks.drop_duplicates(subset=['track_id'], keep='first')
+
+deduped_corr_pvals = []
+deduped_cluster_sizes = []
+
+for cluster_id in range(1, cluster_count + 1):
+    cluster_data = deduped_tracks[deduped_tracks["Cluster"] == cluster_id]
+    cluster_data = cluster_data.dropna(subset=["energy", "popularity"])
+
+    corr, pval = spearmanr(cluster_data["energy"], cluster_data["popularity"])
+    deduped_corr_pvals.append((corr, pval))
+    deduped_cluster_sizes.append(len(cluster_data))
+
+deduped_correlations = [item[0] for item in deduped_corr_pvals]
+deduped_p_values = [item[1] for item in deduped_corr_pvals]
+
+with sl.expander("Deduped Cluster Correlations"):
+    fig, ax = plt.subplots(figsize=(10, 5))
+    bars = ax.bar(cluster_names, np.abs(deduped_correlations), color='skyblue')
+    ax.set_ylabel('Absolute Spearman Correlation')
+    ax.set_title('Absolute Spearman Correlation Strengths by Cluster')
+    ax.set_ylim(0, 1)
+    ax.bar_label(bars, fmt='%.2f')
+    plt.xticks(rotation=45, ha='right')
+    plt.tight_layout()
+    sl.pyplot(fig)
+    fig2, ax2 = plt.subplots(figsize=(10, 5))
+    colors = ['green' if p <= 0.05 else 'gray' for p in deduped_p_values]
+    bars2 = ax2.bar(cluster_names, deduped_correlations, color=colors)
+    ax2.set_ylabel('Spearman Correlation')
+    ax2.set_title('Spearman Correlation by Cluster (Green = p ≤ 0.05)')
+    ax2.set_ylim(-1, 1)
+    ax2.axhline(0, color='black', linewidth=0.8)
+    ax2.bar_label(bars2, fmt='%.2f')
+    plt.xticks(rotation=45, ha='right')
+    plt.tight_layout()
+    sl.pyplot(fig2)
+
+sl.write(
+    "I repeat the same approximate Fisher z comparisons after keeping each track ID in only one cluster. This is a sensitivity check, and the pairwise p-values are unadjusted."
+)
+
+deduped_z_test_result = show_fisher_z_results(
+    "Compare Correlations Between Clusters With No Shared Tracks",
+    deduped_corr_pvals,
+    deduped_cluster_sizes,
+    cluster_names,
+)
