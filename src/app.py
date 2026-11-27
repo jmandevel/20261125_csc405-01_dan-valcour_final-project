@@ -48,6 +48,7 @@ def load_data():
 
 sl.title("Spotify Track Energy and Popularity")
 sl.subheader("Dan Valcour for Fall 2026 CSC405-01 course at UNCG")
+sl.write("https://github.com/jmandevel/20261125_csc405-01_dan-valcour_final-project")
 sl.markdown("This report examines how track energy is correlated to popularity across Spotify genres.")
 
 sl.header("Data Acquisition")
