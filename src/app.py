@@ -389,7 +389,7 @@ with sl.expander("AI Advice"):
     ask_ai("My computer is not that powerful. What if I remove duplicates across clusters before the spearman test?")
     ask_ai("Generate code to do this. Note I still have the functions you defined earlier available. I want to remove duplicates then do the test again.")
 
-sl.write("In order to increase the accuracy of the results, I will remove duplicates across clusters and perform the spearman correlation again. There are other tests I could perform, but my computer is not powerful enough to finish them.")
+sl.write("In order to increase the accuracy of the results, I will remove duplicates across clusters and perform the spearman correlation again. There are other tests I could perform, but my computer is not powerful enough to finish them. This is annoying because the AI previously told me not to remove the tracks because it said it will negatively effect my results.")
 
 deduped_tracks = cluster_tracks.drop_duplicates(subset=['track_id'], keep='first')
 
