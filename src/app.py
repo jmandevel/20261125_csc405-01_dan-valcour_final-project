@@ -448,14 +448,18 @@ with sl.expander("AI Advice"):
     ask_ai("I am done with my analysis. Now, I want to shift to a different task. I want to make a machine learning model that can take in features about a track and predict if its popular or not. What should I do?")
     ask_ai("I like your example source, but I want the output in streamlit inside an expander with table showing classification report.")
 
-sl.write("Using the Spotify Tracks Dataset, I am going to make a ML Classifier that can determine if a Spotify track is popular or not given its features. I will consider a song to be popular if its popularity percentage is greater than 70. This is a binary classification. I will create a Random Forst model, and I will split it between training and testing sets.")
+sl.write("Using the Spotify Tracks Dataset, I am going to make a ML Classifier that can determine if a Spotify track is popular or not given its features. I will consider a song to be popular if its popularity percentage is greater than 70. This is a binary classification. I will create a Random Forst model, and I will split it between training and testing sets. I need to remove duplicate tracks before I make this model.")
 
-data['popular'] = (data['popularity'] >= 70).astype(int)
+dropped_data = data.drop_duplicates(
+    subset=["track_id"]
+).reset_index(drop=True)
+
+dropped_data['popular'] = (dropped_data['popularity'] >= 70).astype(int)
 
 # Select features
 feature_cols = ['energy', 'danceability', 'acousticness', 'instrumentalness', 'tempo', 'valence', 'loudness']
-X = data[feature_cols]
-y = data['popular']
+X = dropped_data[feature_cols]
+y = dropped_data['popular']
 
 # Split data
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
