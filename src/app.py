@@ -47,6 +47,7 @@ def load_data():
     return pd.read_csv("data/dataset.csv", index_col=0)
 
 sl.title("Spotify Track Energy and Popularity")
+sl.subheader("Dan Valcour for Fall 2026 CSC405-01 course at UNCG")
 sl.markdown("This report examines how track energy is correlated to popularity across Spotify genres.")
 
 sl.header("Data Acquisition")
