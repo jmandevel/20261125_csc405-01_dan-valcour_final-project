@@ -489,4 +489,60 @@ with sl.expander("Random Forest Classification Report"):
 with sl.expander("AI Advice"):
     ask_ai(f"How good are these results?\n\n{classification_report(y_test, y_pred)}\n\nROC AUC: {roc_auc_score(y_test, y_proba)}")
 
-sl.write("The model is good at recognizing popular tracks, but not as good at recognizing tracks that are not popular.")
+sl.write("The model is good at recognizing popular tracks, but not as good at recognizing tracks that are not popular. Also, it has a hard time recognizing songs that are extremely popular.")
+
+with sl.expander("AI Advice"):
+    ask_ai("I want to make a simpler model now. How about a linear regression model?")
+
+feature_cols = ['energy', 'danceability', 'acousticness', 'instrumentalness', 'tempo', 'valence', 'loudness']
+X = dropped_data[feature_cols]
+y = dropped_data['popularity']
+
+# Split data
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+# Train linear regression model
+model = LinearRegression()
+model.fit(X_train, y_train)
+
+# Predict on test set
+y_pred = model.predict(X_test)
+
+# Evaluate
+mse = mean_squared_error(y_test, y_pred)
+mae = mean_absolute_error(y_test, y_pred)
+r2 = r2_score(y_test, y_pred)
+
+metrics_df = pd.DataFrame({
+    'Metric': ['Mean Squared Error (MSE)', 'Mean Absolute Error (MAE)', 'R-squared (R²)'],
+    'Value': [mse, mae, r2]
+})
+sample_df = pd.DataFrame({
+    'Actual Popularity': y_test.values[:10],
+    'Predicted Popularity': y_pred[:10]
+})
+
+with sl.expander("Linear Regression Model Performance"):
+    sl.write("Regression metrics for predicting track popularity:")
+    sl.dataframe(metrics_df.style.format({'Value': '{:.4f}'}))
+    sl.write("Sample predictions vs actual popularity:")
+    sl.dataframe(sample_df.style.format({'Actual Popularity': '{:.1f}', 'Predicted Popularity': '{:.1f}'}))
+
+with sl.expander("AI Advice"):
+    metrics = metrics_df.to_string(
+        index=False,
+        float_format="{:.4f}".format
+    )
+    samples = sample_df.to_string(
+        index=False,
+        float_format="{:.1f}".format
+    )
+    ask_ai(
+        f"How are these model results?\n\n"
+        f"Performance Metrics:\n{metrics}\n\n"
+        f"Actual vs. Predicted Popularity:\n{samples}"
+    )
+
+sl.write("The linear regression model has poor performance.")
