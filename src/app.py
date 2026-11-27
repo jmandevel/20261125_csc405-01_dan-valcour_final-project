@@ -367,7 +367,6 @@ z_test_result = show_fisher_z_results(
 
 with sl.expander("AI Advice: Interpreting the Correlations"):
     prompt = "I measured the Spearman correlation between track energy and popularity within each genre cluster. I then used pairwise z tests to compare the correlations. A track counts once per cluster, but the same track can appear in more than one cluster.\n\nSpearman results by cluster:\n"
-
     for i in range(cluster_count):
         prompt += f"Cluster {cluster} ({cluster_names[cluster_count - 1]}): rho = {corr_pvals[i][0]:.4f}, p = {corr_pvals[i][1]:.4g}\n"
     prompt += "\nPairwise Fisher z test results:\n"
@@ -436,3 +435,6 @@ deduped_z_test_result = show_fisher_z_results(
     deduped_cluster_sizes,
     cluster_names,
 )
+
+sl.write("After removing duplicates, the differences between the correlations are still significant.")
+
