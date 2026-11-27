@@ -10,6 +10,10 @@ from sklearn.preprocessing import StandardScaler
 from scipy.stats import spearmanr
 import numpy as np
 from scipy.stats import norm
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import classification_report, roc_auc_score
+
 
 load_dotenv()
 
@@ -438,3 +442,47 @@ deduped_z_test_result = show_fisher_z_results(
 
 sl.write("After removing duplicates, the differences between the correlations are still significant.")
 
+sl.header("Popularity Predictor Model")
+
+with sl.expander("AI Advice"):
+    ask_ai("I am done with my analysis. Now, I want to shift to a different task. I want to make a machine learning model that can take in features about a track and predict if its popular or not. What should I do?")
+    ask_ai("I like your example source, but I want the output in streamlit inside an expander with table showing classification report.")
+
+sl.write("Using the Spotify Tracks Dataset, I am going to make a ML Classifier that can determine if a Spotify track is popular or not given its features. I will consider a song to be popular if its popularity percentage is greater than 70. This is a binary classification. I will create a Random Forst model, and I will split it between training and testing sets.")
+
+data['popular'] = (data['popularity'] >= 70).astype(int)
+
+# Select features
+feature_cols = ['energy', 'danceability', 'acousticness', 'instrumentalness', 'tempo', 'valence', 'loudness']
+X = data[feature_cols]
+y = data['popular']
+
+# Split data
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
+
+# Train model
+model = RandomForestClassifier(random_state=42)
+model.fit(X_train, y_train)
+
+# Predict and evaluate
+y_pred = model.predict(X_test)
+y_proba = model.predict_proba(X_test)[:, 1]
+
+report_dict = classification_report(y_test, y_pred, output_dict=True)
+report_df = pd.DataFrame(report_dict).transpose()
+
+with sl.expander("Random Forest Classification Report"):
+    sl.write("Classification report for predicting track popularity (popular if popularity >= 70).")
+    # Format floats nicely
+    sl.dataframe(report_df.style.format({
+        'precision': '{:.2f}',
+        'recall': '{:.2f}',
+        'f1-score': '{:.2f}',
+        'support': '{:.0f}'
+    }))
+    sl.write(f"ROC AUC: {roc_auc_score(y_test, y_proba):.3f}")
+
+with sl.expander("AI Advice"):
+    ask_ai(f"How good are these results?\n\n{classification_report(y_test, y_pred)}\n\nROC AUC: {roc_auc_score(y_test, y_proba)}")
+
+sl.write("The model is good at recognizing popular tracks, but not as good at recognizing tracks that are not popular.")
