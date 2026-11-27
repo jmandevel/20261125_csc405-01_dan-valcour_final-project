@@ -54,11 +54,29 @@ sl.markdown("The [Spotify Tracks Dataset on Kaggle](https://www.kaggle.com/datas
 
 with sl.expander("AI Advice"):
     ask_ai("I plan to use the Kaggle Spotify Tracks Dataset (https://www.kaggle.com/datasets/maharshipandya/-spotify-tracks-dataset) to study how track energy is correlated to popularity across genres. What dataset properties and limitations should I check before using it for this question?")
+    ask_ai("My dataframe will be loaded into variable data. Generate me code to explore the columns, rows, counts, etc. I want this in a streamlit expander.")
 
 data = load_data()
-with sl.expander("Data Head"):
-    sl.write(f"Loaded {data.shape[0]:,} rows and {data.shape[1]:,} columns. Viewing the first 5 rows.")
-    sl.write(data.head())
+with sl.expander("Dataset Info"):
+    sl.write("### Dataset Shape")
+    sl.write(f"Rows: {data.shape[0]}, Columns: {data.shape[1]}")
+
+    sl.write("### Columns and Data Types")
+    sl.dataframe(pd.DataFrame(data.dtypes, columns=['Data Type']))
+
+    sl.write("### Missing Values Count per Column")
+    missing_counts = data.isnull().sum()
+    sl.dataframe(missing_counts[missing_counts > 0])
+
+    sl.write("### Sample Data")
+    sl.dataframe(data.head())
+
+    sl.write("### Descriptive Statistics (Numerical Columns)")
+    sl.dataframe(data.describe())
+
+    sl.write("### Unique Value Counts per Column")
+    unique_counts = data.nunique()
+    sl.dataframe(unique_counts)
 
 sl.header("Data Cleaning and Processing")
 
@@ -75,6 +93,18 @@ with sl.expander("AI Advice"):
 
 sl.write("There appear to be missing values for artists, album_name, and track_name attributes. These attributes are not relevant to our data analysis, so we can ignore this.")
 
+sl.subheader("Removing Duplicate Tracks")
+
+sl.write("There is another possible issue: There could be duplicate songs with the same track_id. If the same song is in the dataset twice, it could weight the results of our analysis.")
+
+track_count_before_dedup = len(data)
+data = data.drop_duplicates(subset=["track_id"])
+track_count_after_dedup = len(data)
+duplicates_removed = track_count_after_dedup - track_count_before_dedup
+percent_duplicates_removed = (duplicates_removed / track_count_before_dedup) * 100
+
+sl.write(f"Originally, there were {track_count_before_dedup} tracks including duplicates. After dropping duplicates, there are now {track_count_after_dedup}. A total of {duplicates_removed} duplicates were removed, or {percent_duplicates_removed}% of all tracks.")
+
 sl.subheader("Clustering Data")
 sl.write("There are a a lot of genres in the datset. Let's look at all of them.")
 
@@ -90,8 +120,8 @@ with sl.expander("AI Advice"):
     ask_ai("I will use K-Means. What features should I use?")
     ask_ai("Why use energy if I am measuring the correlation of it later? Isn't that bad?")
 
-cluster_count = 5
 clustering_features = ["acousticness", "danceability", "instrumentalness", "tempo", "valence"]
+cluster_count = len(clustering_features)
 feature_names = ", ".join(clustering_features[:-1])
 feature_names += f", and {clustering_features[-1]}"
 
@@ -107,13 +137,14 @@ scaled_averages = scaler.fit_transform(genre_averages)
 
 kmeans = KMeans(n_clusters=cluster_count, random_state=42, n_init=10)
 genre_averages["Cluster"] = kmeans.fit_predict(scaled_averages) + 1
+data["Cluster"] = data["track_genre"].map(genre_averages["Cluster"])
 
 cluster_summary = genre_averages.groupby("Cluster")[clustering_features].mean()
 cluster_summary["Genres"] = genre_averages.groupby("Cluster").size()
 
-sl.write("I generated the clusters using Sci-Kit to perform the K-Means algorithm using Sci-Kit.")
+sl.write("I generated the clusters using using the K-Means algorithm.")
 
-sl.write("Now that the clusters are created, I want to name them based on what genres they contain.")
+sl.write("Now that the clusters are created, I want to name them based on what genres they contain. I can ask the AI assistant to do this for me automatically.")
 
 cluster_names = []
 with sl.expander("AI: Name the Clusters"):
@@ -132,18 +163,12 @@ cluster_name_text += f", and {cluster_names[-1]}"
 
 sl.write(f"I used the AI in order to come up with names for each cluster based on the genres they contain. The names are {cluster_name_text}.")
 
+sl.write("Now, let's view the K-Means result.")
+
 with sl.expander("AI Advice"):
     ask_ai(f"Generate me code to output tables with a list of the genres in each cluster, each in a streamlit expander.")
-
-for cluster in range(1, cluster_count + 1):
-    cluster_genres = genre_averages[genre_averages["Cluster"] == cluster]
-    with sl.expander(f"Cluster {cluster}: {cluster_names[cluster - 1]} ({len(cluster_genres)} genres)"):
-        cluster_table = cluster_genres[clustering_features].round(2)
-        sl.dataframe(cluster_table)
-
-with sl.expander("AI Advice"):
     ask_ai(f"Generate me code to output a 3d scatterplot to how clusters are related to features acousticness, danceability, and insturmentalness.")
-
+    
 with sl.expander("K-Means Result"):
     sl.write(cluster_summary.round(2))
     fig = Figure(figsize=(10, 8))
@@ -166,62 +191,34 @@ with sl.expander("K-Means Result"):
     ax.legend()
     sl.pyplot(fig)
 
-with sl.expander("AI Advice"):
-    ask_ai("I finished the K-Means calucluation, but there is something that I am worried about. Songs can exist in more than one genre, so there could be multiple songs in the same cluster. Is this bad, and should I remove duplicates per cluster?")
-    ask_ai("Should I remove duplicates across all clusters, or does this not matter.")
-    ask_ai("Generate me code to remove duplicates using drop_duplicates. I also want to make a stacked horizontal bar chart showing amount of songs per genre and percent of duplicates.")
+for cluster in range(1, cluster_count + 1):
+    cluster_genres = genre_averages[genre_averages["Cluster"] == cluster]
+    with sl.expander(f"Cluster {cluster}: {cluster_names[cluster - 1]} ({len(cluster_genres)} genres)"):
+        cluster_table = cluster_genres[clustering_features].round(2)
+        sl.dataframe(cluster_table)
 
-sl.write("It is possible for a song to exist in multiple genres. We only want a song to exist once per cluster. We need to remove songs with the same track_id in each cluster.")
+sl.write("It looks good! The tracks are organized into clusters of genres with clear connection to one another.")
 
-genre_clusters = genre_averages[["Cluster"]].reset_index()
-cluster_tracks = data.merge(genre_clusters, on="track_genre")
-song_counts_before = cluster_tracks.groupby("Cluster").size()
-cluster_tracks = cluster_tracks.drop_duplicates(subset=["track_id", "Cluster"], keep='first')
-song_counts_after = cluster_tracks.groupby("Cluster").size()
-duplicates_removed = song_counts_before - song_counts_after
+sl.write(f"The scatterplot is not quite clear because I could only draw the data with 3 dimensions, but there were {cluster_count} clusters in total.")
 
-percent_removed = 100 * duplicates_removed / song_counts_before
-
-with sl.expander("Song Entries and Duplicates by Cluster"):
-    sl.write(f"Removed {duplicates_removed.sum():,} duplicate song entries in total.")
-    fig = Figure(figsize=(8, 4))
-    ax = fig.subplots()
-    ax.bar(song_counts_after.index, song_counts_after, label="Unique tracks")
-    bars = ax.bar(
-        duplicates_removed.index,
-        duplicates_removed,
-        bottom=song_counts_after,
-        label="Duplicate entries removed",
-    )
-    labels = [
-        f"{percent:.1f}% removed"
-        for count, percent in zip(song_counts_before, percent_removed)
-    ]
-    ax.bar_label(bars, labels=labels)
-    ax.set_xlabel("Cluster")
-    ax.set_ylabel("Song entries")
-    ax.set_xticks(song_counts_before.index)
-    ax.legend()
-    sl.pyplot(fig)
-
-sl.write("Now, we can analyze the clusters we created.")
+sl.write("Now, we can analyze attributes of the clusters we created in more detail.")
 
 with sl.expander("AI Advice"):
     ask_ai("I want to analyze the clusters with a chart of 5 number summary including standard deviation and variance. I also want box and whisker plots for the features we will analyze. I want one set for population across all 5 clusters and another set for energy.")
 
 for column in ["energy", "popularity"]:
     with sl.expander(f"{column.capitalize()} by Cluster"):
-        grouped = cluster_tracks.groupby("Cluster")[column]
+        grouped = data.groupby("Cluster")[column]
         summary = grouped.describe()
         summary["var"] = grouped.var()
         sl.write(summary[["count", "min", "25%", "50%", "75%", "max", "std", "var"]].round(2))
         fig = Figure(figsize=(10, 4))
         ax = fig.subplots()
-        sns.boxplot(data=cluster_tracks, x="Cluster", y=f"{column}", ax=ax)
+        sns.boxplot(data=data, x="Cluster", y=f"{column}", ax=ax)
         ax.set_ylabel(column.capitalize())
         fig.tight_layout()
         sl.pyplot(fig)
-    
+
 with sl.expander("AI Advice"):
     ask_ai("I just analyzed the energy and popularity ranges. I see a lot of outliers. Do these matter for the correlation analysis?")
 
@@ -232,7 +229,7 @@ with sl.expander("AI Advice"):
 
 for cluster in range(1, cluster_count + 1):
     with sl.expander(f"Energy and Popularity for Cluster {cluster}: {cluster_names[cluster - 1]}"):
-        tracks = cluster_tracks[cluster_tracks["Cluster"] == cluster]
+        tracks = data[data["Cluster"] == cluster]
         fig, ax = plt.subplots(figsize=(6, 4))
         sns.regplot(
             x='energy',
@@ -252,14 +249,16 @@ sl.header("Correlation by Genre")
 with sl.expander("AI Advice"):
     ask_ai("I have my clusters determined. What else should I do before doing correlation tests on energy and popularity?")
     ask_ai("If I leave outliers, will this effect normalization? Will this negatively effect a Pearson correlation")
-    ask_ai("Generate me code to do Spearman correlation. cluster_count is amount of clusters, and its 1 indexed. cluster_tracks is a Pandas DataFrame containing all tracks including Cluster id.")
+    ask_ai("Generate me code to do Spearman correlation. cluster_count is amount of clusters, and its 1 indexed. data is a Pandas DataFrame containing all tracks including Cluster id.")
 
 sl.write("Since I am leaving the outliers in my data, I will analyze my data with a Spearman correlation coefficient. A Pearson correlation would be negatively effected by so many outliers.")
+
+sl.write("Time to calculate the Spearman correlation values. Then, I will create some charts so I can analyze the result.")
 
 corr_pvals = []
 cluster_sizes = []
 for cluster_id in range(1, cluster_count + 1):
-    cluster_data = cluster_tracks[cluster_tracks['Cluster'] == cluster_id]
+    cluster_data = data[data['Cluster'] == cluster_id]
     corr, pval = spearmanr(cluster_data['energy'], cluster_data['popularity'])
     corr_pvals.append((corr, pval))
     cluster_sizes.append(len(cluster_data))
@@ -293,7 +292,7 @@ with sl.expander("Cluster Correlations"):
     plt.tight_layout()
     sl.pyplot(fig2)
 
-sl.write("Notice that energy and population have a negative correlation in the clusters \"Dance & Urban\", \"Calm & Classical\", and \"Rock & Metal\". Meanwhile, notice that that \"Folk & Acoutsic\" has a positive correlation, while \"Electronic & Techno\" has almost no correlation. All of the correlations weak, and the largest is .21 (\"Calm & Classical\").")
+sl.write("Notice that energy and population have a negative correlation in the clusters \"Dance & Urban\", \"Ambient & Classical\", and \"Rock & Metal\". Meanwhile, notice that that \"Folk & Acoutsic\" has a positive correlation, while \"Electronic & Techno\" has almost no correlation. All of the correlations weak, and the largest is .21 (\"Calm & Classical\").")
 
 with sl.expander("AI Advice"):
     ask_ai("Now, I want to perform a test to see if the correlations are statistically significant between clusters. What test should I do?")
@@ -372,7 +371,7 @@ z_test_result = show_fisher_z_results(
 )
 
 with sl.expander("AI Advice: Interpreting the Correlations"):
-    prompt = "I measured the Spearman correlation between track energy and popularity within each genre cluster. I then used pairwise z tests to compare the correlations. A track counts once per cluster, but the same track can appear in more than one cluster.\n\nSpearman results by cluster:\n"
+    prompt = "I measured the Spearman correlation between track energy and popularity within each genre cluster. I then used pairwise z tests to compare the correlations. A track counts once per all clusters. \n\nSpearman results by cluster:\n"
     for i in range(cluster_count):
         prompt += f"Cluster {cluster} ({cluster_names[cluster_count - 1]}): rho = {corr_pvals[i][0]:.4f}, p = {corr_pvals[i][1]:.4g}\n"
     prompt += "\nPairwise Fisher z test results:\n"
@@ -381,74 +380,18 @@ with sl.expander("AI Advice: Interpreting the Correlations"):
             if j <= i:
                 continue
             prompt += f"Cluster {cluster_names[i]} vs. cluster {cluster_names[j]}: z = {z_test_result[i][j][0]:.4f}, p = {z_test_result[i][j][1]:.4g}\n"
-    prompt += "\nHow should I interpret the direction and strength of the correlations? Explain the difference between testing whether one cluster's correlation is zero and testing whether two clusters' correlations differ. Are these Fisher z tests appropriate for Spearman correlations when clusters share tracks? How should I account for multiple comparisons, and what conclusions do these results support? Note that there are no duplicate tracks in the same cluster."
+    prompt += "\nHow should I interpret the direction and strength of the correlations? Explain the difference between testing whether one cluster's correlation is zero and testing whether two clusters' correlations differ."
     ask_ai(prompt)
 
-sl.write("We measured Spearman correlations between track energy and popularity within each genre cluster, finding mostly weak but statistically significant associations. Pairwise Fisher z-tests indicated significant differences in correlation strength between clusters. However, because some tracks appear in multiple clusters, these tests violate the assumption of independent samples, so results should be interpreted cautiously. Adjusting for multiple comparisons confirms the significance of most differences. Overall, the data suggest that the energy-popularity relationship varies across genre clusters, but further analysis accounting for overlapping tracks is needed to confirm these findings robustly.")
+sl.write("Interestingly, the correlations between clusters are statistically significant unless accounting for the difference between the \"Ambient & Classical\" and the \"Rock & Metal\" clusters. For some reason, the correlation between energy and popularity is the same for those two clusters in particular.")
 
-with sl.expander("AI Advice"):
-    ask_ai("Help me to implement more robust tests.")
-    ask_ai("My computer is not that powerful. What if I remove duplicates across clusters before the spearman test?")
-    ask_ai("Generate code to do this. Note I still have the functions you defined earlier available. I want to remove duplicates then do the test again.")
-
-sl.write("In order to increase the accuracy of the results, I will remove duplicates across clusters and perform the spearman correlation again. There are other tests I could perform, but my computer is not powerful enough to finish them. This is annoying because the AI previously told me not to remove the tracks because it said it will negatively effect my results.")
-
-deduped_tracks = cluster_tracks.drop_duplicates(subset=['track_id'], keep='first')
-
-deduped_corr_pvals = []
-deduped_cluster_sizes = []
-
-for cluster_id in range(1, cluster_count + 1):
-    cluster_data = deduped_tracks[deduped_tracks["Cluster"] == cluster_id]
-    cluster_data = cluster_data.dropna(subset=["energy", "popularity"])
-
-    corr, pval = spearmanr(cluster_data["energy"], cluster_data["popularity"])
-    deduped_corr_pvals.append((corr, pval))
-    deduped_cluster_sizes.append(len(cluster_data))
-
-deduped_correlations = [item[0] for item in deduped_corr_pvals]
-deduped_p_values = [item[1] for item in deduped_corr_pvals]
-
-with sl.expander("Deduped Cluster Correlations"):
-    fig, ax = plt.subplots(figsize=(10, 5))
-    bars = ax.bar(cluster_names, np.abs(deduped_correlations), color='skyblue')
-    ax.set_ylabel('Absolute Spearman Correlation')
-    ax.set_title('Absolute Spearman Correlation Strengths by Cluster')
-    ax.set_ylim(0, 1)
-    ax.bar_label(bars, fmt='%.2f')
-    plt.xticks(rotation=45, ha='right')
-    plt.tight_layout()
-    sl.pyplot(fig)
-    fig2, ax2 = plt.subplots(figsize=(10, 5))
-    colors = ['green' if p <= 0.05 else 'gray' for p in deduped_p_values]
-    bars2 = ax2.bar(cluster_names, deduped_correlations, color=colors)
-    ax2.set_ylabel('Spearman Correlation')
-    ax2.set_title('Spearman Correlation by Cluster (Green = p ≤ 0.05)')
-    ax2.set_ylim(-1, 1)
-    ax2.axhline(0, color='black', linewidth=0.8)
-    ax2.bar_label(bars2, fmt='%.2f')
-    plt.xticks(rotation=45, ha='right')
-    plt.tight_layout()
-    sl.pyplot(fig2)
-
-sl.write(
-    "I repeat the same approximate Fisher z comparisons after keeping each track ID in only one cluster. This is a sensitivity check, and the pairwise p-values are unadjusted."
-)
-
-deduped_z_test_result = show_fisher_z_results(
-    "Compare Correlations Between Clusters With No Shared Tracks",
-    deduped_corr_pvals,
-    deduped_cluster_sizes,
-    cluster_names,
-)
-
-sl.write("After removing duplicates, the differences between the correlations are still significant.")
-
-sl.header("Popularity Predictor Model")
+sl.header("Popularity Predictor Models")
 
 with sl.expander("AI Advice"):
     ask_ai("I am done with my analysis. Now, I want to shift to a different task. I want to make a machine learning model that can take in features about a track and predict if its popular or not. What should I do?")
     ask_ai("I like your example source, but I want the output in streamlit inside an expander with table showing classification report.")
+
+sl.subheader("Random Forest Classifier")
 
 sl.write("Using the Spotify Tracks Dataset, I am going to make a ML Classifier that can determine if a Spotify track is popular or not given its features. I will consider a song to be popular if its popularity percentage is greater than 70. This is a binary classification. I will create a Random Forst model, and I will split it between training and testing sets. I need to remove duplicate tracks before I make this model.")
 
@@ -491,10 +434,52 @@ with sl.expander("Random Forest Classification Report"):
 with sl.expander("AI Advice"):
     ask_ai(f"How good are these results?\n\n{classification_report(y_test, y_pred)}\n\nROC AUC: {roc_auc_score(y_test, y_proba)}")
 
-sl.write("The model is good at recognizing popular tracks, but not as good at recognizing tracks that are not popular. Also, it has a hard time recognizing songs that are extremely popular.")
+sl.write("The model is good at recognizing popular tracks, but not as good at recognizing tracks that are not popular. Also, it has a hard time recognizing songs that are extremely popular. This problem stems from the fact that there is a significant imbalance in the dataset. It contains a lot of tracks with low popularity, and only a few tracks with high popularity.")
+
+sl.subheader("Linear Regression Model")
 
 with sl.expander("AI Advice"):
     ask_ai("I want to make a simpler model now. How about a linear regression model?")
+    ask_ai("With a linear regression model, do I have to worry about outliers?")
+    ask_ai("Generate code to remove outliers for me.")
+
+sl.write("Now, I will make a linear regression model. This should be simpler than the previous random forest model. However, there is a problem I have to deal with first. The outliers will have a negative effect on my model's results. I need to remove them.")
+
+feature_cols = [
+    "energy", "danceability", "acousticness",
+    "instrumentalness", "tempo", "valence", "loudness"
+]
+
+X = dropped_data[feature_cols]
+y = dropped_data["popularity"]
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+q1 = X_train.quantile(0.25)
+q3 = X_train.quantile(0.75)
+iqr = q3 - q1
+
+lower_bound = q1 - 1.5 * iqr
+upper_bound = q3 + 1.5 * iqr
+
+outliers = (
+    (X_train < lower_bound) | (X_train > upper_bound)
+).any(axis=1)
+
+outliers_removed = outliers.sum()
+percent_removed = outliers.mean() * 100
+
+X_train = X_train.loc[~outliers]
+y_train = y_train.loc[~outliers]
+
+sl.write(
+    f"Removed {outliers_removed:,} outlier tracks "
+    f"({percent_removed:.2f}% of training data)."
+)
+
+sl.write("Now that the outliers are removed, I can train the linear regression model.")
 
 feature_cols = ['energy', 'danceability', 'acousticness', 'instrumentalness', 'tempo', 'valence', 'loudness']
 X = dropped_data[feature_cols]
@@ -547,4 +532,4 @@ with sl.expander("AI Advice"):
         f"Actual vs. Predicted Popularity:\n{samples}"
     )
 
-sl.write("The linear regression model has poor performance.")
+sl.write("The linear regression model has poor performance. The model predictions lack variability and do not reflect actual poopularity differences well. It cannot capture the relationship between features and popularity because it is underfitting. This appears to be because the features of this model do not have a strong linear predicitve power.")
